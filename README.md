@@ -3,6 +3,9 @@ qrcode.js — JavaScript QR Code Generator
 
 ![test](https://github.com/zu-min-g/qrcode/workflows/test/badge.svg)
 
+* [Demo](https://zu-min-g.github.io/qrcode-demo/)
+* [Releases](https://github.com/zu-min-g/qrcode/releases)
+
 使い方 - browser
 --------------------------------------------------------------------------------
 
