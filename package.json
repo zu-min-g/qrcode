@@ -9,6 +9,7 @@
     "build-all": "run-p build:*",
     "build:prod": "cross-env NODE_ENV=production webpack",
     "build:dev": "cross-env NODE_ENV=development webpack",
+    "build-module": "run-p build:tsc build:module",
     "build:tsc": "tsc",
     "build:module": "babel src --extensions \".ts\" --out-dir dist/module --source-maps inline",
     "clean": "run-p clean:*",
@@ -21,7 +22,7 @@
     "test:run": "jest",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint --fix \"src/**/*.ts\"",
-    "prepublishOnly": "run-s clean:module build:tsc"
+    "prepublishOnly": "run-s clean:module build-module"
   },
   "repository": {
     "type": "git",
