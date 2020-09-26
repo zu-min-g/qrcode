@@ -4,6 +4,8 @@ import {
   CanvasDrawer,
   CanvasOptions,
   MemoryDrawer,
+  DrawingDriver,
+  isDrawingDriver,
 } from "../drawer"
 import { maxDataLen, rsBlock, formatInfo, typeInfo } from "../data"
 import { QROptions, EccLevel, isQROptions, Mask } from "./QROptions"
@@ -20,6 +22,7 @@ import { generateDataModule } from "./DataModuleGenerator"
 import { ByteArrayBuilder } from "./ByteArrayBuilder"
 import { capacities } from "../data/capacities"
 import * as Str from "./Str"
+import { SvgDrawer, SvgOptions } from "../drawer/SvgDrawer"
 
 /** 分割の最小値 */
 export const DIVISION_MIN = 1
@@ -336,14 +339,13 @@ export class QR implements QRData {
       codes: [bits],
     })
     const symbol = new MemoryDrawer()
-    const drawQr = new DrawQR(dummyQR, symbol)
+    const drawQr = new DrawQR(symbol)
 
     for (const i in maskFunctions) {
       // シンボルを作成する
       dummyQR.formatInfo = [formatInfo[this.level][i]]
       dummyQR.masks = [parseInt(i) as Mask]
-      drawQr.recycle(dummyQR)
-      drawQr.drawAll()
+      drawQr.draw(dummyQR)
 
       const score = symbol.calcPenalty(0)
 
@@ -398,12 +400,25 @@ export class QR implements QRData {
   }
 
   /**
+   * canvas タグに出力します。
+   * @param canvas
+   * @param options
+   */
+  public drawToSvg(svg: SVGElement, options: SvgOptions): SvgOptions {
+    const drawer = new SvgDrawer(svg, options)
+    this.draw(drawer)
+    return drawer
+  }
+
+  /**
    * 指定した drawer に QR コードを出力します。
    * @param drawer
    */
-  public draw(drawer: Drawer): void {
-    const drawQr = new DrawQR(this, drawer)
-    drawQr.drawAll()
+  public draw(drawer: Drawer | DrawingDriver): void {
+    if (!isDrawingDriver(drawer)) {
+      drawer = new DrawQR(drawer)
+    }
+    drawer.draw(this)
   }
 
   /**

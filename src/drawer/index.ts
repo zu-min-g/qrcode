@@ -1,4 +1,7 @@
 export * from "./Drawer"
+export * from "./BitmapDrawer"
 export * from "./DrawQR"
 export * from "./MemoryDrawer"
 export * from "./CanvasDrawer"
+export * from "./SvgDrawer"
+export * from "./DrawingDriver"

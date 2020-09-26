@@ -18,8 +18,9 @@
     "watch": "run-p watch:*",
     "watch:webpack": "webpack --watch",
     "watch:tsc": "tsc --watch",
-    "test": "run-s test:*",
-    "test:run": "jest",
+    "test": "run-s test:run:*",
+    "test:run:jest": "jest",
+    "test:coverage": "jest --collect-coverage",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint --fix \"src/**/*.ts\"",
     "prepublishOnly": "run-s clean:module build-module"
