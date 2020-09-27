@@ -1,3 +1,5 @@
+import { EightBitEncoder } from "../encoder"
+
 /**
  * 指定文字数になるまで、指定した文字で埋めます。
  * @param str 入力
@@ -28,4 +30,32 @@ export function pad(
  */
 export function toBin(dec: number, len: number): string {
   return pad(dec.toString(2), len, "0", "left")
+}
+
+/**
+ * 指定文字列の先頭から指定した長さの文字列を返却します。
+ * @param str
+ * @param limit 最大長（バイト）
+ * @param encoder
+ */
+export function split8Bit(
+  str: string,
+  limit: number,
+  encoder: EightBitEncoder
+): { bytes: number; value: string } {
+  const chars = [...str]
+  let bytes = 0
+  let value = ""
+  while (chars.length > value.length) {
+    const char = chars[value.length]
+    const cl = encoder.len(char)
+    if (bytes + cl > limit) break
+    bytes += cl
+    value += char
+  }
+
+  return {
+    bytes,
+    value,
+  }
 }
