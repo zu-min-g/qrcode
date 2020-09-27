@@ -1,5 +1,4 @@
-import { EventEmitter } from "events"
-import { CanvasDrawer, CanvasOptions, EccLevel, generate } from "../../../src"
+import { CanvasDrawer, CanvasOptions } from "../../../src"
 import { canvasMock } from "../../TestHelper"
 
 describe("CanvasDrawer コンストラクタ", () => {
@@ -9,7 +8,7 @@ describe("CanvasDrawer コンストラクタ", () => {
     expect(cd.thickness).toBe(1)
     expect(cd.foreColor).toBe("rgb(0,0,0)")
     expect(cd.backgroundColor).toBe("rgb(255,255,255)")
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -45,7 +44,7 @@ describe("CanvasDrawer コンストラクタ", () => {
     expect(cd.thickness).toBe(2)
     expect(cd.foreColor).toBe("#000")
     expect(cd.backgroundColor).toBe("#fff")
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -61,7 +60,7 @@ describe("自動リサイズ", () => {
       thickness: 1,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -75,7 +74,7 @@ describe("自動リサイズ", () => {
       thickness: 1,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -89,7 +88,7 @@ describe("自動リサイズ", () => {
       thickness: 1,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 4,
       type: 1,
     })
@@ -106,7 +105,7 @@ describe("dot メソッド描画テスト", () => {
       thickness: 2,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -126,7 +125,7 @@ describe("dot メソッド描画テスト", () => {
       flipHorizontal: true,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -148,7 +147,7 @@ describe("fillRect メソッド描画テスト", () => {
       thickness: 2,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -168,7 +167,7 @@ describe("fillRect メソッド描画テスト", () => {
       flipHorizontal: true,
     })
 
-    cd.initialize(new EventEmitter(), {
+    cd.initialize({
       division: 1,
       type: 1,
     })
@@ -183,14 +182,6 @@ describe("fillRect メソッド描画テスト", () => {
 })
 
 describe("CanvasDrawer その他メソッド", () => {
-  it("recycle は未サポート", () => {
-    const mock = canvasMock()
-    const cd = new CanvasDrawer(mock.canvas, {})
-    expect(() => {
-      cd.recycle()
-    }).toThrow("サポートしていない操作です")
-  })
-
   it("toDataUri オプション指定なし", () => {
     const mock = canvasMock()
     mock.toBlob.mockImplementation(

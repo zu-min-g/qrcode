@@ -203,6 +203,19 @@
               </div>
             </div>
             <div class="form-group row">
+              <label class="col-sm-3 col-form-label">出力</label>
+              <div class="col-sm-9">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input observe-on-click" type="radio" name="output" id="output_canvas" checked="checked">
+                  <label class="form-check-label" for="output_canvas">Canvas</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input observe-on-click" type="radio" name="output" id="output_svg">
+                  <label class="form-check-label" for="output_svg">SVG</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group row">
               <label class="col-sm-3 col-form-label">
                 オプション
               </label>
@@ -230,9 +243,14 @@
         <div class="col text-center">
           <div>
             <div id="canvas-area">
-              <div><canvas id="canvas" width="100" height="100" style="border:1px dashed #c0c0c0;" class="checker-board"></canvas></div>
+              <div><canvas id="canvas" width="100" height="100" style="image-rendering: crisp-edges;" class="checker-board"></canvas></div>
               <p><button id="download" class="btn btn-primary">ダウンロード</button></p>
               <p><textarea rows="2" id="dataUri" class="text-muted text-break form-control"></textarea></p>
+            </div>
+            <div id="svg-area">
+              <div><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg" class="checker-board" style="image-rendering: crisp-edges;"></svg></div>
+              <p><button id="downloadSvg" class="btn btn-primary">ダウンロード</button></p>
+              <p><textarea rows="2" id="dataUriSvg" class="text-muted text-break form-control"></textarea></p>
             </div>
             <div id="message-area" class="alert alert-danger" style="display: none;"><span id="message"></span></div>
           </div>
@@ -253,6 +271,7 @@
     <script type="text/javascript">
     (function () {
       var drawer = null
+      var drawerSvg = null
       function mode(){
         $("#text").hide();
         $("#card").hide();
@@ -313,23 +332,45 @@
               debug: $("#debug").prop('checked'),
               mask: maskNo,
           });
-          drawer = qr.drawToCanvas($("#canvas")[0], {
+
+          if ($("#output_canvas").prop('checked')) {
+            $("#canvas-area").show()
+            $("#svg-area").hide()
+            drawer = qr.drawToCanvas($("#canvas")[0], {
               thickness: parseInt($("#size").val()),
               color: $("#color").val(),
               backgroundColor: $("#backgroundColor").val(),
               debug: $("#debug").prop('checked'),
               flipHorizontal: $("#flip").prop('checked'),
               transparent: $("#transparent").prop('checked'),
-          });
-          if (typeof Promise !== "undefined") {
-            drawer.toDataUri().then(function(uri) {
-              $("#dataUri").val(uri)
-            })
+            });
+            if (typeof Promise !== "undefined") {
+              drawer.toDataUri().then(function(uri) {
+                $("#dataUri").val(uri)
+              })
+            }
+          } else {
+            $("#canvas-area").hide()
+            $("#svg-area").show()
+            drawerSvg = qr.drawToSvg($("#svg")[0], {
+              thickness: parseInt($("#size").val()),
+              color: $("#color").val(),
+              backgroundColor: $("#backgroundColor").val(),
+              flipHorizontal: $("#flip").prop('checked'),
+              transparent: $("#transparent").prop('checked'),
+            });
+            if (typeof Promise !== "undefined") {
+              drawerSvg.toDataUri().then(function(uri) {
+                $("#dataUriSvg").val(uri)
+              })
+            }
           }
-          $("#canvas-area").show()
+
           $("#message-area").hide();
         } catch (e) {
+          console.log(e)
           $("#canvas-area").hide();
+          $("#svg-area").hide();
           $("#message-area").show();
           $("#message").text(e.message);
         }
@@ -356,6 +397,21 @@
               URL.revokeObjectURL(uri);
           }, 1);
         })
+      });
+
+      $('#downloadSvg').on('click', function () {
+        if (drawer === null) return;
+        var blob = drawerSvg.toBlob()
+        const uri = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.download = 'qr.svg';
+        a.href = uri;
+        a.click();
+        a.remove();
+        setTimeout(function () {
+            URL.revokeObjectURL(uri);
+        }, 1);
       });
       $('#inverse').on('click', function () {
         var tmp = $("#color").val();

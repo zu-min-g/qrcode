@@ -1,39 +1,30 @@
 import { EventEmitter } from "events"
-import { QRStruct } from "../core/QRStruct"
+import { QRData } from "../core/QRStruct"
 
-/**
- * QR コードを描画する際のインターフェース。
- */
 export interface Drawer {
   /**
-   * インスタンス作成後の初期化処理を行います。
+   * 初期化します。
+   * @param qr
    */
-  initialize: (emitter: EventEmitter, qr: QRStruct) => void
+  subscribe(emitter: EventEmitter): void
 
   /**
-   * 初期化して再度オブジェクトを利用可能な状態にします。
+   * QR コードの作成を開始します。
+   * @param qr
    */
-  recycle: (qr: QRStruct) => void
+  initialize(qr: QRData): void
 
   /**
-   * 矩形を描画します（塗りつぶし）
+   * シンボルの作成を開始します。
    * @param index シンボルの番号
-   * @param x 左からの位置。マイナスの場合は右からの位置
-   * @param y 上からの位置。マイナスの場合は下からの位置
-   * @param w 幅
-   * @param h 高さ
    */
-  fillRect: (index: number, x: number, y: number, w: number, h: number) => void
+  begin(index: number): void
 
   /**
-   * 矩形を描画します（枠）
+   * シンボルの作成を終了します。
    * @param index シンボルの番号
-   * @param x 左からの位置。マイナスの場合は右からの位置
-   * @param y 上からの位置。マイナスの場合は下からの位置
-   * @param w 幅
-   * @param h 高さ
    */
-  rect: (index: number, x: number, y: number, w: number, h: number) => void
+  end(index: number): void
 
   /**
    * モジュールを描画します
@@ -41,5 +32,21 @@ export interface Drawer {
    * @param x 左からの位置。0 以上を指定
    * @param y 上からの位置。0 以上を指定
    */
-  dot: (index: number, x: number, y: number) => void
+  drawModule(index: number, x: number, y: number): void
+
+  /**
+   * 位置合わせパターン単体を描画します。
+   * @param index 構造的連接の 0 から始まる位置
+   * @param x 左上の位置
+   * @param y 左上の位置
+   */
+  drawAlignmentPattern(index: number, x: number, y: number): void
+
+  /**
+   * 位置検出パターンを描画します。
+   * @param index 構造的連接の 0 から始まる位置
+   * @param x 左上の位置
+   * @param y 左上の位置
+   */
+  drawDetectionPattern(index: number, x: number, y: number): void
 }

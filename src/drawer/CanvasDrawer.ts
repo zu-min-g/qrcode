@@ -1,6 +1,6 @@
 import { getSize } from "../core/QR"
 import { EventEmitter } from "events"
-import { Drawer } from "./Drawer"
+import { BitmapDrawer } from "./BitmapDrawer"
 import { defaultValue, isValidType } from "../core/Validator"
 import { QRStruct } from "../core/QRStruct"
 
@@ -45,7 +45,7 @@ export function isCanvasOptions(obj: unknown): obj is CanvasOptions {
 /**
  * canvas タグに出力します。
  */
-export class CanvasDrawer implements Drawer {
+export class CanvasDrawer extends BitmapDrawer {
   /** 余白（px） */
   public space: number
 
@@ -92,6 +92,7 @@ export class CanvasDrawer implements Drawer {
     protected canvas: HTMLCanvasElement,
     protected options: CanvasOptions
   ) {
+    super()
     if (!isCanvasOptions(options)) {
       throw new Error("options の指定に誤りがあります。型を確認してください。")
     }
@@ -111,21 +112,7 @@ export class CanvasDrawer implements Drawer {
     this.ctx = ctx
   }
 
-  initialize(emitter: EventEmitter, qr: QRStruct): void {
-    this.size = getSize(qr.type)
-    this.sizeInPx = this.size * this.thickness + this.space * 2
-    this.columns = Math.ceil(Math.sqrt(qr.division))
-    this.rows = Math.ceil(qr.division / this.columns)
-    this.backAlpha = this.options.transparent === true ? 0 : 1
-    this.clear()
-    this.resizeCanvas()
-    this.fillBackground()
-
-    for (let index = 0; index < qr.division; index++) {
-      this.left[index] = (index % this.columns) * this.sizeInPx
-      this.top[index] = Math.floor(index / this.columns) * this.sizeInPx
-    }
-
+  subscribe(emitter: EventEmitter): void {
     if (this.options.debug === true) {
       emitter.on("preDrawDetectionPattern", () => {
         this.foreColor = "rgb(200,200,200)"
@@ -146,17 +133,25 @@ export class CanvasDrawer implements Drawer {
         this.foreColor = "rgb(0,255,0)"
       })
     }
-
-    emitter.on("preDraw", (data) => {
-      this.begin(data.index)
-    })
   }
 
   /**
    * @inheritdoc
    */
-  recycle(): void {
-    throw new Error("サポートしていない操作です")
+  initialize(qr: QRStruct): void {
+    this.size = getSize(qr.type)
+    this.sizeInPx = this.size * this.thickness + this.space * 2
+    this.columns = Math.ceil(Math.sqrt(qr.division))
+    this.rows = Math.ceil(qr.division / this.columns)
+    this.backAlpha = this.options.transparent === true ? 0 : 1
+    this.clear()
+    this.resizeCanvas()
+    this.fillBackground()
+
+    for (let index = 0; index < qr.division; index++) {
+      this.left[index] = (index % this.columns) * this.sizeInPx
+      this.top[index] = Math.floor(index / this.columns) * this.sizeInPx
+    }
   }
 
   begin(index: number): void {
@@ -191,9 +186,6 @@ export class CanvasDrawer implements Drawer {
    * @inheritdoc
    */
   fillRect(index: number, x: number, y: number, w: number, h: number): void {
-    x = x < 0 ? this.size + x : x
-    y = y < 0 ? this.size + y : y
-
     if (this.options.flipHorizontal) {
       x = this.size - x - w
     }
@@ -217,9 +209,6 @@ export class CanvasDrawer implements Drawer {
    * @inheritdoc
    */
   rect(index: number, x: number, y: number, w: number, h: number): void {
-    x = x < 0 ? this.size + x : x
-    y = y < 0 ? this.size + y : y
-
     for (let offset = 0; offset < w; offset++) {
       this.dot(index, x + offset, y)
       this.dot(index, x + offset, y + h - 1)
@@ -259,7 +248,6 @@ export class CanvasDrawer implements Drawer {
 
   /**
    * Data URI Scheme に変換します。
-   * @param cb 結果を返却するコールバック関数
    * @param type 画像フォーマット
    * @param quality
    */

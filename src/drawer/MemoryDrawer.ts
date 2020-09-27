@@ -1,7 +1,6 @@
-import { Drawer } from "./Drawer"
 import { getSize } from "../core/QR"
-import { EventEmitter } from "events"
 import { QRStruct } from "../core/QRStruct"
+import { BitmapDrawer } from "./BitmapDrawer"
 
 const SAME_MODULE_PATTERN = /1{5,}|2{5,}/g
 
@@ -15,7 +14,7 @@ const DETECTION_PATTERN = /(((^|1{4})2122212)|(2122212((?=1{4})|$)))/gm
 /**
  * メモリ上（配列）に描画します。
  */
-export class MemoryDrawer implements Drawer {
+export class MemoryDrawer extends BitmapDrawer {
   /** 暗ブロックの値 */
   public fore = true
   /**
@@ -30,11 +29,15 @@ export class MemoryDrawer implements Drawer {
   /** QR コードシンボルのサイズ */
   protected size = 0
 
-  initialize(emitter: EventEmitter, qr: QRStruct): void {
-    this.recycle(qr)
+  subscribe(): void {
+    // 何もしない
   }
 
-  recycle(qr: QRStruct): void {
+  begin(): void {
+    // 何もしない
+  }
+
+  initialize(qr: QRStruct): void {
     const newSize = getSize(qr.type)
 
     // サイズが変わらない場合は、配列を再利用する
@@ -63,9 +66,6 @@ export class MemoryDrawer implements Drawer {
    * @inheritdoc
    */
   fillRect(index: number, x: number, y: number, w: number, h: number): void {
-    x = this.normalize(x)
-    y = this.normalize(y)
-
     for (let xOffset = 0; xOffset < w; xOffset++) {
       for (let yOffset = 0; yOffset < h; yOffset++) {
         this.data[index][x + xOffset][y + yOffset] = this.fore
@@ -77,9 +77,6 @@ export class MemoryDrawer implements Drawer {
    * @inheritdoc
    */
   rect(index: number, x: number, y: number, w: number, h: number): void {
-    x = this.normalize(x)
-    y = this.normalize(y)
-
     for (let offset = 0; offset < w; offset++) {
       this.data[index][x + offset][y] = this.fore
       this.data[index][x + offset][y + h - 1] = this.fore
@@ -88,17 +85,6 @@ export class MemoryDrawer implements Drawer {
       this.data[index][x][y + offset] = this.fore
       this.data[index][x + w - 1][y + offset] = this.fore
     }
-  }
-
-  /**
-   * @inheritdoc
-   */
-  dot(index: number, x: number, y: number): void {
-    this.data[index][x][y] = this.fore
-  }
-
-  normalize(x: number): number {
-    return x < 0 ? this.size + x : x
   }
 
   /**

@@ -410,4 +410,9 @@ describe("QR.ts その他メソッド", () => {
       debug: true,
     })
   })
+  it("drawToSvg", () => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    const qr = generate("test", {})
+    qr.drawToSvg(svg, {})
+  })
 })

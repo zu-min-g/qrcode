@@ -1,49 +1,48 @@
-import { Binary, DataModule, Module } from "../core/QR"
+import { Binary, DataModule, getSize, Module } from "../core/QR"
 import { alignmentPoints } from "../data"
 import { EventEmitter } from "events"
 import { Drawer } from "./Drawer"
 import { QRData } from "../core/QRStruct"
 import maskFunctions from "../core/maskFunctions"
 import { Mask } from "../core/QROptions"
+import { DrawingDriver } from "./DrawingDriver"
 
 /**
  * QR コードを描画するクラス。
  */
-export class DrawQR {
+export class DrawQR implements DrawingDriver {
   protected emitter = new EventEmitter()
+  protected qr = {} as QRData
 
-  constructor(protected qr: QRData, protected drawer: Drawer) {
-    this.drawer.initialize(this.emitter, qr)
-  }
-
-  recycle(qr: QRData): void {
-    this.qr = qr
-    this.drawer.recycle(qr)
+  constructor(protected drawer: Drawer) {
+    this.drawer.subscribe(this.emitter)
   }
 
   /**
    * すべてのシンボルを描画します。
    */
-  drawAll(): void {
-    this.emitter.emit("start")
+  draw(qr: QRData): void {
+    this.qr = qr
+    this.drawer.initialize(qr)
     for (let n = 0; this.qr.codes.length > n; n++) {
-      this.draw(n)
+      this.drawSymbol(n)
     }
-    this.emitter.emit("end")
   }
 
   /**
    * シンボル１つを描画します。
    * @param index 構造的連接の 0 から始まる位置
    */
-  draw(index: number): void {
+  drawSymbol(index: number): void {
     this.emitter.emit("preDraw", { index })
+    this.drawer.begin(index)
     this.drawTimingPattern(index)
-    this.drawDetectionPattern(index)
-    this.drawAlignmentPattern(index)
+    this.drawDetectionPatternAll(index)
+    this.drawAlignmentPatternAll(index)
     this.drawData(index, this.qr.codes[index], this.qr.masks[index])
     this.drawFormatInfo(index, this.qr.formatInfo[index])
     this.drawTypeInfo(index, this.qr.typeInfo)
+    this.drawer.end(index)
     this.emitter.emit("postDraw", { index })
   }
 
@@ -51,17 +50,11 @@ export class DrawQR {
    * 位置検出パターンを描画します。
    * @param index 構造的連接の 0 から始まる位置
    */
-  drawDetectionPattern(index: number): void {
+  drawDetectionPatternAll(index: number): void {
     this.emitter.emit("preDrawDetectionPattern", { index })
-    // 外枠
-    this.drawer.rect(index, 0, 0, 7, 7)
-    this.drawer.rect(index, -7, 0, 7, 7)
-    this.drawer.rect(index, 0, -7, 7, 7)
-
-    // 中心
-    this.drawer.fillRect(index, 2, 2, 3, 3)
-    this.drawer.fillRect(index, -5, 2, 3, 3)
-    this.drawer.fillRect(index, 2, -5, 3, 3)
+    this.drawer.drawDetectionPattern(index, 0, 0)
+    this.drawer.drawDetectionPattern(index, this.rightPosition(7), 0)
+    this.drawer.drawDetectionPattern(index, 0, this.bottomPosition(7))
     this.emitter.emit("postDrawDetectionPattern", { index })
   }
 
@@ -71,10 +64,11 @@ export class DrawQR {
    */
   drawTimingPattern(index: number): void {
     this.emitter.emit("preDrawTimingPattern", { index })
-    for (let i = 0; i < 5 + this.qr.type * 2; i++) {
+    const len = 1 + this.qr.type * 2
+    for (let i = 0; i < len; i++) {
       const posX = 8 + i * 2
-      this.drawer.dot(index, posX, 6)
-      this.drawer.dot(index, 6, posX)
+      this.drawer.drawModule(index, posX, 6)
+      this.drawer.drawModule(index, 6, posX)
     }
     this.emitter.emit("postDrawTimingPattern", { index })
   }
@@ -83,7 +77,7 @@ export class DrawQR {
    * 位置合わせパターンを描画します。
    * @param index 構造的連接の 0 から始まる位置
    */
-  drawAlignmentPattern(index: number): void {
+  drawAlignmentPatternAll(index: number): void {
     this.emitter.emit("preDrawAlignmentPattern", { index })
     if (this.qr.type === 1) {
       return
@@ -99,24 +93,10 @@ export class DrawQR {
           continue
         const x = alignmentPoints[this.qr.type][i] - 2
         const y = alignmentPoints[this.qr.type][j] - 2
-        this.drawAlignmentPatternUnit(index, x, y)
+        this.drawer.drawAlignmentPattern(index, x, y)
       }
     }
     this.emitter.emit("postDrawAlignmentPattern", { index })
-  }
-
-  /**
-   * 位置合わせパターン単体を描画します。
-   * @param index 構造的連接の 0 から始まる位置
-   * @param x 左上の位置
-   * @param y 左上の位置
-   */
-  drawAlignmentPatternUnit(index: number, x: number, y: number): void {
-    // 外枠
-    this.drawer.rect(index, x, y, 5, 5)
-
-    // 中心
-    this.drawer.fillRect(index, x + 2, y + 2, 1, 1)
   }
 
   /**
@@ -135,7 +115,7 @@ export class DrawQR {
         if (mask(x, y)) {
           isPositive = !isPositive
         }
-        if (isPositive) this.drawer.dot(index, x, y)
+        if (isPositive) this.drawer.drawModule(index, x, y)
       })
     })
     this.emitter.emit("postDrawData", { index, bits })
@@ -149,7 +129,7 @@ export class DrawQR {
   drawFormatInfo(index: number, formatInfo: Binary): void {
     this.emitter.emit("preDrawFormatInfo", { index, formatInfo })
     // 暗モジュール
-    this.drawer.fillRect(index, 8, -8, 1, 1)
+    this.drawer.drawModule(index, 8, this.bottomPosition(8))
 
     const yb = 17 + this.qr.type * 4 - 7
     let x1 = 8
@@ -158,8 +138,8 @@ export class DrawQR {
     let y2 = 8
     for (let i = 0; i < 15; i++) {
       if ((formatInfo & 1) === 1) {
-        this.drawer.dot(index, x1, y1)
-        this.drawer.dot(index, x2, y2)
+        this.drawer.drawModule(index, x1, y1)
+        this.drawer.drawModule(index, x2, y2)
       }
       formatInfo = formatInfo >> 1
       do {
@@ -193,12 +173,32 @@ export class DrawQR {
         j++
       ) {
         if ((typeInfo & 1) === 1) {
-          this.drawer.dot(index, i, j)
-          this.drawer.dot(index, j, i)
+          this.drawer.drawModule(index, i, j)
+          this.drawer.drawModule(index, j, i)
         }
         typeInfo = typeInfo >> 1
       }
     }
     this.emitter.emit("postDrawTypeInfo", { index, typeInfo })
+  }
+
+  /**
+   * 右からの位置を返却します。
+   * @param qr
+   * @param x
+   */
+  rightPosition(x: number): number {
+    const size = getSize(this.qr.type)
+    return size - x
+  }
+
+  /**
+   * 下からの位置を返却します。
+   * @param qr
+   * @param y
+   */
+  bottomPosition(y: number): number {
+    const size = getSize(this.qr.type)
+    return size - y
   }
 }
