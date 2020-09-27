@@ -6,6 +6,8 @@ import {
   MemoryDrawer,
   DrawingDriver,
   isDrawingDriver,
+  SvgDrawer,
+  SvgOptions,
 } from "../drawer"
 import { maxDataLen, rsBlock, formatInfo, typeInfo } from "../data"
 import { QROptions, EccLevel, isQROptions, Mask } from "./QROptions"
@@ -22,7 +24,6 @@ import { generateDataModule } from "./DataModuleGenerator"
 import { ByteArrayBuilder } from "./ByteArrayBuilder"
 import { capacities } from "../data/capacities"
 import * as Str from "./Str"
-import { SvgDrawer, SvgOptions } from "../drawer/SvgDrawer"
 
 /** 分割の最小値 */
 export const DIVISION_MIN = 1
