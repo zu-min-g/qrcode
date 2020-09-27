@@ -12,6 +12,8 @@ import {
   ByteArrayBuilder,
   deserializeQrData,
   serializeQrData,
+  SvgDrawer,
+  DrawQR,
 } from "../../../src"
 import { copyQRData } from "../../../src/core/QRStruct"
 import * as Str from "../../../src/core/Str"
@@ -414,5 +416,11 @@ describe("QR.ts その他メソッド", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
     const qr = generate("test", {})
     qr.drawToSvg(svg, {})
+  })
+  it("draw", () => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    const drawer = new DrawQR(new SvgDrawer(svg, {}))
+    const qr = generate("test", {})
+    qr.draw(drawer)
   })
 })
