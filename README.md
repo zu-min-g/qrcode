@@ -9,6 +9,8 @@ qrcode.js — JavaScript QR Code Generator
 使い方 - browser
 --------------------------------------------------------------------------------
 
+### Canvas の場合
+
 ```html
 <script src="/path/to/qrcode.min.js"></script>
 <canvas id="qr">
@@ -25,6 +27,24 @@ try {
 </script>
 ```
 
+### SVG の場合
+
+```html
+<script src="/path/to/qrcode.min.js"></script>
+<svg id="qrSvg"></svg>
+<script>
+try {
+    qrcode.generate('QR コードの内容', {
+        // QR Code options
+    }).drawToSvg(document.getElementById('qrSvg'), {
+        // SVG options
+    });
+} catch (e) {
+    // 生成失敗時の処理
+}
+</script>
+```
+
 使い方 - Vue with TypeScript
 --------------------------------------------------------------------------------
 
@@ -34,7 +54,7 @@ try {
 npm i -S @zu-min/qrcode
 ```
 
-### Vue.js の例
+### Canvas の場合
 
 ```vue
 <template>
@@ -55,6 +75,37 @@ export default Vue.extend({
                     // QR Code options
                 }).drawToCanvas(this.$refs.canvas as HTMLCanvasElement, {
                     // canvas options
+                })
+            } catch (e) {
+                // 生成失敗時の処理
+            }
+        }
+    }
+})
+</script>
+```
+
+### SVG の場合
+
+```vue
+<template>
+    <svg ref="svg"></svg>
+</template>
+
+<script lang="ts">
+import Vue from 'vue'
+import * as qr from '@zu-min/qrcode'
+export default Vue.extend({
+    mounted() {
+        this.generate()
+    },
+    methods: {
+        generate() {
+            try {
+                qr.generate("QR コードの内容", {
+                    // QR Code options
+                }).drawToSvg(this.$refs.svg as SVGElement, {
+                    // SVG options
                 })
             } catch (e) {
                 // 生成失敗時の処理
@@ -154,6 +205,47 @@ canvas options
 ### debug
 
 true の場合、デバッグ用に塗り分けを行います。
+
+### flipHorizontal
+
+true の場合、左右反転します。
+
+### transparent
+
+true の場合、背景を透明にします。
+
+SVG options
+--------------------------------------------------------------------------------
+
+```js
+{
+    idPrefix: "qrSvg",
+    thickness: 1,
+    color: 'rgb(0,0,0)',
+    backgroundColor: 'rgb(255,255,255)',
+    flipHorizontal: false,
+    transparent: false,
+}
+```
+
+上記はデフォルト値です。
+
+### idPrefix
+
+SVG 内で使用する ID 属性の接頭辞です。SVG 以外も含め、ページ内で一意になる必要が
+あります。
+
+### thickness
+
+モジュール（QRコードのドット1つ）の１辺の長さを px で指定します。
+
+### color
+
+モジュールの色を指定します。 `rgb(0, 0, 0)` 形式か、 `#000000` 形式で指定できます。
+
+### backgroundColor
+
+背景色を指定します。 `rgb(255, 255, 255)` 形式か、 `#ffffff` 形式で指定できます。
 
 ### flipHorizontal
 
