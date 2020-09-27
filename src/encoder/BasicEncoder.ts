@@ -6,6 +6,7 @@ import { Encoder, EncodeResult } from "./Encoder"
 import { QRStruct } from "../core/QRStruct"
 import { ByteArrayBuilder } from "../core/ByteArrayBuilder"
 import { EccLevel } from "../core/QROptions"
+import * as Str from "../core/Str"
 
 const TRIO = 3
 const PAIR = 2
@@ -533,7 +534,7 @@ export class TryBasicEncode {
       }
     }
 
-    const ret = this.split8Bit(cStr, a)
+    const ret = Str.split8Bit(cStr, a, this.encoder)
     push((ba) => {
       ba.addBinary(ModeSpecifier.EightBit, 4)
       ba.addBinary(ret.bytes, len)
@@ -541,30 +542,5 @@ export class TryBasicEncode {
       return ret.value.length
     })
     return ModeSpecifier.EightBit
-  }
-
-  /**
-   * 指定文字列の先頭から指定した長さの文字列を返却します。
-   * @param str
-   * @param limit 最大長（バイト）
-   */
-  protected split8Bit(
-    str: string,
-    limit: number
-  ): { bytes: number; value: string } {
-    let bytes = 0
-    let value = ""
-    while (str.length > value.length) {
-      const char = str[value.length]
-      const cl = this.encoder.len(char)
-      if (bytes + cl > limit) break
-      bytes += cl
-      value += char
-    }
-
-    return {
-      bytes,
-      value,
-    }
   }
 }

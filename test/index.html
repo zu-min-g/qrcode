@@ -221,7 +221,7 @@
               </label>
               <div class="col-sm-9">
                 <div class="form-check">
-                  <input type="checkbox" value="0" id="flip"" class="form-check-input observe-on-change">
+                  <input type="checkbox" value="0" id="flip" class="form-check-input observe-on-change">
                   <label class="form-check-label" for="flip">表裏（左右）反転</label>
                 </div>
                 <div class="form-check">
@@ -285,11 +285,6 @@
         qr();
       }
 
-      // IE など
-      if (typeof TextEncoder === "undefined") {
-        $("#encoding").val("shift-jis")
-      }
-
       function qr(){
         var src = "qr-img.php?";
         var str = "";
@@ -344,7 +339,7 @@
               flipHorizontal: $("#flip").prop('checked'),
               transparent: $("#transparent").prop('checked'),
             });
-            if (typeof Promise !== "undefined") {
+            if (typeof Promise !== "undefined" && typeof $("#canvas")[0].toBlob !== "undefined") {
               drawer.toDataUri().then(function(uri) {
                 $("#dataUri").val(uri)
               })
